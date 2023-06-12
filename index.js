@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors")
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
@@ -39,7 +39,6 @@ async function run() {
 
         app.post('/users', async(req, res) =>{
             const user = req.body;
-            console.log(user)
             const query = {email : user.email}
             const existingUser = await userCollection.findOne(query);
             if(existingUser){
@@ -48,6 +47,29 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
+
+        app.patch('/users/admin/:id', async(req, res) =>{
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id)}
+            const update = {
+                $set: {
+                    role: 'admin'
+                }, 
+            }
+            const result = await userCollection.updateOne(filter, update)
+            res.send(result)
+        })
+        app.patch("/users/instructor/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const update = {
+              $set: {
+                role: "instructor",
+              },
+            };
+            const result = await userCollection.updateOne(filter, update);
+            res.send(result);
+          });
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
