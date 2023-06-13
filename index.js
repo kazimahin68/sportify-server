@@ -47,6 +47,7 @@ async function run() {
         await client.connect();
 
         const userCollection = client.db("sportifyDb").collection("users");
+        const classCollection = client.db("sportifyDb").collection("classes");
 
         // JWT
         app.post('/jwt', (req, res) => {
@@ -107,7 +108,7 @@ async function run() {
         })
 
         // Instructor User
-        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+        app.get('/users/instructors/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             if (req.decoded?.email !== email) {
                 res.send({ instructor: false })
@@ -118,11 +119,13 @@ async function run() {
             res.send(result)
         })
 
+        // All Instructors
         app.get('/users/instructors', verifyJWT, verifyInstructor,  async(req, res) =>{
           const result = await userCollection.find({role: 'instructor'}).toArray();
           res.send(result)
         })
 
+        // Set Admin Role
         app.patch('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
@@ -134,7 +137,9 @@ async function run() {
             const result = await userCollection.updateOne(filter, update)
             res.send(result)
         })
-        app.patch("/users/instructor/:id", async (req, res) => {
+
+        // Set Instructor Role
+        app.patch("/users/instructors/:id", async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const update = {
@@ -145,6 +150,14 @@ async function run() {
             const result = await userCollection.updateOne(filter, update);
             res.send(result);
         });
+
+        // Class Collection API
+        app.post('/classes', verifyJWT, verifyInstructor, async(req, res) => {
+            const addClass  = req.body;
+            const result = await classCollection.insertOne(addClass);
+            res.send(result)
+
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
