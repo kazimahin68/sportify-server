@@ -48,6 +48,7 @@ async function run() {
 
         const userCollection = client.db("sportifyDb").collection("users");
         const classCollection = client.db("sportifyDb").collection("classes");
+        const selectedClassCollection = client.db("sportifyDb").collection("selected");
 
         // JWT
         app.post('/jwt', (req, res) => {
@@ -120,7 +121,7 @@ async function run() {
         })
 
         // All Instructors
-        app.get('/users/instructors', verifyJWT, verifyInstructor,  async(req, res) =>{
+        app.get('/instructors', async(req, res) =>{
           const result = await userCollection.find({role: 'instructor'}).toArray();
           res.send(result)
         })
@@ -152,11 +153,34 @@ async function run() {
         });
 
         // Class Collection API
+
+        // TODO: STATUS APPROVED
+        // Get all classes (public)
+        app.get('/classes', async(req, res) =>{
+            const result = await classCollection.find({status: 'pending'}).toArray()
+            res.send(result)
+        })
+
+        // add new classes
         app.post('/classes', verifyJWT, verifyInstructor, async(req, res) => {
             const addClass  = req.body;
             const result = await classCollection.insertOne(addClass);
             res.send(result)
 
+        })
+
+        // Selected class by students
+
+        app.get('/classes/selected/:email', async(req, res) => {
+            const email = req.params.email;
+            const query = {studentEmail: email}
+            const result = await selectedClassCollection.find(query).toArray();
+            res.send(result);
+        })
+        app.post('/selected', async(req, res) => {
+            const selectedClass = req.body;
+            const result = await selectedClassCollection.insertOne(selectedClass);
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
