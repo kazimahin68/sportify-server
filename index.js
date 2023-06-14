@@ -121,15 +121,15 @@ async function run() {
         })
 
         // All Instructors
-        app.get('/instructors', async(req, res) =>{
-          const result = await userCollection.find({role: 'instructor'}).toArray();
-          res.send(result)
+        app.get('/instructors', async (req, res) => {
+            const result = await userCollection.find({ role: 'instructor' }).toArray();
+            res.send(result)
         })
 
         // Set Admin Role
         app.patch('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = { _id: new ObjectId(id) }
+            const filter = { _id: new ObjectId(id) };
             const update = {
                 $set: {
                     role: 'admin'
@@ -156,14 +156,14 @@ async function run() {
 
         // TODO: STATUS APPROVED
         // Get all classes (public)
-        app.get('/classes', async(req, res) =>{
-            const result = await classCollection.find({status: 'pending'}).toArray()
+        app.get('/classes', async (req, res) => {
+            const result = await classCollection.find({ status: 'pending' }).toArray()
             res.send(result)
         })
 
         // add new classes
-        app.post('/classes', verifyJWT, verifyInstructor, async(req, res) => {
-            const addClass  = req.body;
+        app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
+            const addClass = req.body;
             const result = await classCollection.insertOne(addClass);
             res.send(result)
 
@@ -171,15 +171,31 @@ async function run() {
 
         // Selected class by students
 
-        app.get('/classes/selected/:email', async(req, res) => {
+        app.get('/classes/selected/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
-            const query = {studentEmail: email}
+            const query = { studentEmail: email }
             const result = await selectedClassCollection.find(query).toArray();
             res.send(result);
         })
-        app.post('/selected', async(req, res) => {
+        app.post('/classes/selected', verifyJWT, async (req, res) => {
             const selectedClass = req.body;
+            const id = selectedClass._id;
+            const query = { _id: id }
+            const existingClass = await selectedClassCollection.findOne(query);
+            // console.log(existingClass)
+            if (existingClass) {
+                return res.send({ message: 'already selected' })
+            }
             const result = await selectedClassCollection.insertOne(selectedClass);
+            res.send(result);
+
+        })
+
+        app.delete('/classes/selected/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: id };
+            console.log(query)
+            const result = await selectedClassCollection.deleteOne(query);
             res.send(result);
         })
 
