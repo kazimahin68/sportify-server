@@ -194,6 +194,21 @@ async function run() {
             // console.log(result, updateCLass)
             res.send(result)
         })
+        // CLass feedback set
+        app.patch('/classes/feedback/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const feedback = req.body;
+            console.log(feedback)
+            const filter = {_id: new ObjectId(id)}
+            const updateCLass = {
+                $set: {
+                    feedback: feedback.feedback,
+                }
+            }
+            const result = await classCollection.updateOne(filter, updateCLass)
+            console.log(result, updateCLass)
+            res.send(result)
+        })
 
         // app.patch('/classes/:id', verifyJWT, async (req, res) => {
         //     const id = req.params.id;
