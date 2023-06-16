@@ -124,6 +124,12 @@ async function run() {
             res.send(result)
         })
 
+        // Popular instructor
+        app.get('/users/popular', async (req, res) => {
+            const result = await userCollection.find({ role: 'instructor' }).limit(6).toArray()
+            res.send(result)
+        })
+
         // All Instructors
         app.get('/instructors', async (req, res) => {
             const result = await userCollection.find({ role: 'instructor' }).toArray();
@@ -158,16 +164,30 @@ async function run() {
 
         // Class Collection API
 
-        // TODO: STATUS APPROVED
         // Get all classes (public)
         app.get('/classes', async (req, res) => {
             const result = await classCollection.find({ status: 'approved' }).toArray()
             res.send(result)
         })
 
+        // get popular class
+        app.get('/classes/popular', async (req, res) => {
+            const result = await classCollection.find({ status: 'approved' }).sort({ enrolled: -1 }).limit(6).toArray()
+            res.send(result)
+        })
+
         app.get('/all-classes', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await classCollection.find().toArray();
-            console.log(result)
+            // console.log(result)
+            res.send(result)
+        })
+
+        // get instructor classes
+        app.get('/classes/user/:email', verifyJWT, verifyInstructor, async (req, res) => {
+            const email = req.params.email;
+            const query = { instructorEmail: email }
+            const result = await classCollection.find(query).toArray();
+            // console.log(result)
             res.send(result)
         })
 
@@ -184,7 +204,7 @@ async function run() {
             const id = req.params.id;
             const status = req.body;
             // console.log(status)
-            const filter = {_id: new ObjectId(id)}
+            const filter = { _id: new ObjectId(id) }
             const updateCLass = {
                 $set: {
                     status: status.status,
@@ -198,15 +218,15 @@ async function run() {
         app.patch('/classes/feedback/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const feedback = req.body;
-            console.log(feedback)
-            const filter = {_id: new ObjectId(id)}
+            // console.log(feedback)
+            const filter = { _id: new ObjectId(id) }
             const updateCLass = {
                 $set: {
                     feedback: feedback.feedback,
                 }
             }
             const result = await classCollection.updateOne(filter, updateCLass)
-            console.log(result, updateCLass)
+            // console.log(result, updateCLass)
             res.send(result)
         })
 
@@ -238,11 +258,8 @@ async function run() {
 
         app.get('/classes/payment/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
-            // console.log(id)
             const query = { _id: new ObjectId(id) }
-            // console.log(query)
-            const result = await classCollection.findOne(query)
-            // console.log(result)
+            const result = await selectedClassCollection.findOne(query)
             res.send(result);
         })
 
@@ -300,14 +317,15 @@ async function run() {
         // Payment API
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
-            console.log(payment)
+            // console.log(payment)
             // const insertQuery = {className: payment.className}
             // const existingEnrolledClass = await paymentCollection.findOne(insertQuery)
             // if(existingEnrolledClass){
             //     return res.send({message: 'class already enrolled'})
             // }
             const insertResult = await paymentCollection.insertOne(payment);
-            const query = { classId: payment.id }
+            const id = payment.id;
+            const query = { _id: new ObjectId(id) }
             console.log(query)
             const selectedClassId = payment.id;
             const filter = { _id: new ObjectId(selectedClassId) }
@@ -321,7 +339,7 @@ async function run() {
             const updateResult = await classCollection.updateOne(filter, update)
             const deleteResult = await selectedClassCollection.deleteOne(query)
             res.send({ insertResult, updateResult, deleteResult })
-            // console.log(updateResult)
+            console.log(updateResult, deleteResult)
         })
 
         // Send a ping to confirm a successful connection
