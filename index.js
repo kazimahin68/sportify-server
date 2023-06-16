@@ -161,7 +161,13 @@ async function run() {
         // TODO: STATUS APPROVED
         // Get all classes (public)
         app.get('/classes', async (req, res) => {
-            const result = await classCollection.find({ status: 'pending' }).toArray()
+            const result = await classCollection.find({ status: 'approved' }).toArray()
+            res.send(result)
+        })
+
+        app.get('/all-classes', verifyJWT, verifyAdmin, async (req, res) => {
+            const result = await classCollection.find().toArray();
+            console.log(result)
             res.send(result)
         })
 
@@ -171,6 +177,22 @@ async function run() {
             const result = await classCollection.insertOne(addClass);
             res.send(result)
 
+        })
+
+        // CLass Status Change
+        app.patch('/classes/status/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const status = req.body;
+            // console.log(status)
+            const filter = {_id: new ObjectId(id)}
+            const updateCLass = {
+                $set: {
+                    status: status.status,
+                }
+            }
+            const result = await classCollection.updateOne(filter, updateCLass)
+            // console.log(result, updateCLass)
+            res.send(result)
         })
 
         // app.patch('/classes/:id', verifyJWT, async (req, res) => {
@@ -211,13 +233,13 @@ async function run() {
 
         app.post('/classes/selected', verifyJWT, async (req, res) => {
             const selectedClass = req.body;
-            const id = selectedClass._id;
-            const query = { _id: id }
-            const existingClass = await selectedClassCollection.findOne(query);
+            // const id = selectedClass._id;
+            // const query = { _id: id }
+            // const existingClass = await selectedClassCollection.findOne(query);
             // console.log(existingClass)
-            if (existingClass) {
-                return res.send({ message: 'already selected' })
-            }
+            // if (existingClass) {
+            //     return res.send({ message: 'already selected' })
+            // }
             const result = await selectedClassCollection.insertOne(selectedClass);
             res.send(result);
 
@@ -226,7 +248,7 @@ async function run() {
 
         app.delete('/classes/selected/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: id };
+            const query = { _id: new ObjectId(id) };
             // console.log(query)
             const result = await selectedClassCollection.deleteOne(query);
             res.send(result);
@@ -249,14 +271,31 @@ async function run() {
             })
         })
 
+        // get enrolled classes
+        app.get('/payments/enrolled/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const options = {
+                sort: { "date": -1 }
+            }
+            const result = await paymentCollection.find(query, options).toArray();
+            res.send(result)
+        })
+
         // Payment API
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
-            // console.log(payment)
+            console.log(payment)
+            // const insertQuery = {className: payment.className}
+            // const existingEnrolledClass = await paymentCollection.findOne(insertQuery)
+            // if(existingEnrolledClass){
+            //     return res.send({message: 'class already enrolled'})
+            // }
             const insertResult = await paymentCollection.insertOne(payment);
-            const query = { _id: payment.id }
+            const query = { classId: payment.id }
+            console.log(query)
             const selectedClassId = payment.id;
-            const filter = { _id: new ObjectId(selectedClassId)}
+            const filter = { _id: new ObjectId(selectedClassId) }
             // console.log(query, filter)
             const update = {
                 $inc: {
