@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors")
 const jwt = require('jsonwebtoken')
-const stripe = require("stripe")('sk_test_51NJ1TQAL2rmJJYlw3iZVxwL5E7sAKITtpdoG1mesSmVDJIxHYXTjhSaBRUfHfv4KXEfPGtOEgBcOAQ5AdW38aXeW00iwRd1nSX')
+const stripe = require("stripe")('sk_test_51NJ1TQAL2rmJJYlw3iZVxwL5E7sAKITtpdoG1mesSmVDJIxHYXTjhSaBRUfHfv4KXEfPGtOEgBcOAQ5AdW38aXeW00iwRd1nSX');
+// This key isn't work from the .env file. I tried many times and all the way I know.
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
@@ -12,7 +13,7 @@ app.use(express.static("public"));
 app.use(express.json())
 
 
-console.log(process.env.PAYMENT_SECRET_KEY)
+// console.log(process.env.PAYMENT_SECRET_KEY)
 // Verify JWT
 const verifyJWT = (req, res, next) => {
     const authorization = req.headers.authorization;
@@ -47,7 +48,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        client.connect();
 
         const userCollection = client.db("sportifyDb").collection("users");
         const classCollection = client.db("sportifyDb").collection("classes");
@@ -127,6 +128,11 @@ async function run() {
         // Popular instructor
         app.get('/users/popular', async (req, res) => {
             const result = await userCollection.find({ role: 'instructor' }).limit(6).toArray()
+            res.send(result)
+        })
+
+        app.get('/users/admin', async (req, res) => {
+            const result = await userCollection.find({ role: 'admin' }).limit(3).toArray()
             res.send(result)
         })
 
