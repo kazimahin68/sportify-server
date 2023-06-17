@@ -330,12 +330,13 @@ async function run() {
             //     return res.send({message: 'class already enrolled'})
             // }
             const insertResult = await paymentCollection.insertOne(payment);
-            const id = payment.id;
+            const id = payment.deleteId;
             const query = { _id: new ObjectId(id) }
             console.log(query)
             const selectedClassId = payment.id;
+            console.log(selectedClassId)
             const filter = { _id: new ObjectId(selectedClassId) }
-            // console.log(query, filter)
+            console.log(query, filter)
             const update = {
                 $inc: {
                     seats: -1,
