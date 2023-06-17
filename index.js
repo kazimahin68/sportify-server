@@ -332,9 +332,9 @@ async function run() {
             const insertResult = await paymentCollection.insertOne(payment);
             const id = payment.deleteId;
             const query = { _id: new ObjectId(id) }
-            console.log(query)
+            // console.log(query)
             const selectedClassId = payment.id;
-            console.log(selectedClassId)
+            // console.log(selectedClassId)
             const filter = { _id: new ObjectId(selectedClassId) }
             console.log(query, filter)
             const update = {
@@ -346,7 +346,7 @@ async function run() {
             const updateResult = await classCollection.updateOne(filter, update)
             const deleteResult = await selectedClassCollection.deleteOne(query)
             res.send({ insertResult, updateResult, deleteResult })
-            console.log(updateResult, deleteResult)
+            // console.log(updateResult, deleteResult)
         })
 
         // Send a ping to confirm a successful connection
